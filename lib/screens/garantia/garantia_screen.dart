@@ -7,7 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 
 class GarantiaScreen extends StatefulWidget {
   const GarantiaScreen({super.key});
@@ -36,6 +36,7 @@ class _GarantiaScreenState extends State<GarantiaScreen> {
   // Imágenes
   final List<File?> _imagenes = List.filled(3, null);
   final ImagePicker _picker = ImagePicker();
+  final List<Uint8List?> _imagenesBytes = List.filled(3, null);
 
   // Variable para controlar si corresponde a garantía
   bool? _correspondeGarantia;
@@ -87,9 +88,19 @@ class _GarantiaScreenState extends State<GarantiaScreen> {
     );
 
     if (option != null) {
-      final XFile? image = await _picker.pickImage(source: option);
-      if (image != null) {
-        setState(() => _imagenes[index] = File(image.path));
+      try {
+        final XFile? image = await _picker.pickImage(source: option);
+        if (image != null) {
+          final bytes = await image.readAsBytes(); // Esta línea ahora SÍ se usa
+          setState(() {
+            _imagenes[index] = File(image.path);
+            _imagenesBytes[index] = bytes; // Aquí usamos los bytes
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar imagen: ${e.toString()}')),
+        );
       }
     }
   }
@@ -180,20 +191,10 @@ class _GarantiaScreenState extends State<GarantiaScreen> {
               border: Border.all(color: const Color(0xFFE00420), width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: _imagenes[index] != null
-                ? Stack(
-              children: [
-                Image.file(_imagenes[index]!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-                const Positioned(
-                  right: 5,
-                  top: 5,
-                  child: Icon(Icons.edit, color: Colors.white),
-                ),
-              ],
+            child: _imagenesBytes[index] != null
+                ? Image.memory(
+              _imagenesBytes[index]!,
+              fit: BoxFit.cover,
             )
                 : const Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -232,7 +233,7 @@ class _GarantiaScreenState extends State<GarantiaScreen> {
     return true;
   }
 
-  pw.Widget _buildPDFHeader(pw.Context pdfContext) {
+  pw.Widget _buildPDFHeader() { // Eliminamos el parámetro de contexto
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -679,44 +680,100 @@ class _GarantiaScreenState extends State<GarantiaScreen> {
   }
 
   Future<void> _generarPDF() async {
-    if (!_validarCamposCompletos()) {
-      return;
-    }
+    if (!_validarCamposCompletos()) return;
 
     try {
       final pdf = pw.Document();
+      final List<pw.Widget> pdfWidgets = [];
 
+      // 1. Añadir todos los widgets excepto imágenes
+      pdfWidgets.addAll([
+        _buildPDFHeader(),
+        pw.SizedBox(height: 20),
+        _buildPDFInformacionGeneral(),
+        pw.SizedBox(height: 20),
+        _buildPDFFallaError(),
+        pw.SizedBox(height: 20),
+        _buildPDFDiagnostico(),
+        pw.SizedBox(height: 20),
+        _buildPDFGarantia(),
+        _buildPDFProcedimiento(),
+        pw.SizedBox(height: 20),
+        _buildPDFRepuestos(),
+        pw.SizedBox(height: 20),
+      ]);
+
+      // 2. Procesar imágenes que ya fueron seleccionadas
+      final List<pw.Widget> imageWidgets = [];
+
+      for (int i = 0; i < _imagenesBytes.length; i++) {
+        if (_imagenesBytes[i] != null) {
+          try {
+            imageWidgets.add(
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    i == 0 ? 'Etiqueta del equipo' :
+                    i == 1 ? 'Repuesto dañado' : 'Otra imagen relevante',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Image(
+                    pw.MemoryImage(_imagenesBytes[i]!),
+                    width: 300,
+                    height: 200,
+                    fit: pw.BoxFit.contain,
+                  ),
+                  pw.SizedBox(height: 20),
+                ],
+              ),
+            );
+          } catch (e) {
+            debugPrint('Error procesando imagen $i: $e');
+            imageWidgets.add(
+              pw.Text('Error al mostrar imagen ${i + 1}',
+                  style: const pw.TextStyle(fontSize: 10, color: PdfColors.red)),
+            );
+          }
+        }
+      }
+
+      // 3. Añadir sección de imágenes si hay imágenes
+      if (imageWidgets.isNotEmpty) {
+        pdfWidgets.add(
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'IMÁGENES',
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColor.fromHex('#E11931'),
+                ),
+              ),
+              pw.SizedBox(height: 8),
+              ...imageWidgets,
+            ],
+          ),
+        );
+      }
+
+      // 4. Generar el PDF
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(32),
           footer: (pw.Context context) => _buildPDFFooter(context),
-          build: (pw.Context pdfContext) {
-            return [
-              _buildPDFHeader(pdfContext),
-              pw.SizedBox(height: 20),
-              _buildPDFInformacionGeneral(),
-              pw.SizedBox(height: 20),
-              _buildPDFFallaError(),
-              pw.SizedBox(height: 20),
-              _buildPDFDiagnostico(),
-              pw.SizedBox(height: 20),
-              _buildPDFGarantia(),
-              _buildPDFProcedimiento(),
-              pw.SizedBox(height: 20),
-              _buildPDFRepuestos(),
-              pw.SizedBox(height: 20),
-              _buildPDFImagenes(),
-              pw.SizedBox(height: 30),
-            ];
-          },
+          build: (pw.Context context) => pdfWidgets,
         ),
       );
 
       await _guardarYAbrirPDF(pdf);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al generar PDF: $e')),
+        SnackBar(content: Text('Error al generar PDF: ${e.toString()}')),
       );
     }
   }
