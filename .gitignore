@@ -1,0 +1,58 @@
+# Archivos y carpetas generados automáticamente (NO deben subirse)
+build/
+.dart_tool/
+.packages
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+android/.gradle/
+.idea/
+.gradle/
+*.iml
+
+# Archivos del sistema
+*.log
+*.lock
+*.DS_Store
+
+# Archivos grandes no versionados
+*.apk
+*.aab
+*.dill
+
+# Caches
+.pub-cache/
+android/local.properties
+
+# Otros
+*.keystore
+### IntelliJ IDEA ###
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
