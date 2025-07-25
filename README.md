@@ -1,4 +1,4 @@
-# hitachi_v1
+App para agilizar el servicio de Post Venta
 
 A new Flutter project.
 
