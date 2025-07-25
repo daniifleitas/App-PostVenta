@@ -1,5 +1,7 @@
 App para agilizar el servicio de Post Venta
 
+Este proyecto está enfocado en agilizar el servicio de post-venta, generando informes con mayor rapidez y unificando modelos en toda LATAM. Su objetivo es permitir un mejor flujo de información y facilitar el seguimiento de las visitas realizadas en cada obra.
+
 A new Flutter project.
 
 ## Getting Started
