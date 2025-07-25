@@ -101,6 +101,7 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
   late List<List<String?>> _respuestas;
   final List<File?> _imagenes = List.filled(3, null);
   final ImagePicker _picker = ImagePicker();
+  final List<Uint8List?> _imagenesBytes = List.filled(3, null);
 
   @override
   void initState() {
@@ -144,7 +145,20 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
     if (option != null) {
       final XFile? image = await _picker.pickImage(source: option);
       if (image != null) {
-        setState(() => _imagenes[index] = File(image.path));
+        if (kIsWeb) {
+          // Para web: leer como bytes
+          final bytes = await image.readAsBytes();
+          setState(() {
+            _imagenesBytes[index] = bytes;
+            _imagenes[index] = null; // Asegurarse que el File sea null en web
+          });
+        } else {
+          // Para móvil/desktop: usar File normalmente
+          setState(() {
+            _imagenes[index] = File(image.path);
+            _imagenesBytes[index] = null;
+          });
+        }
       }
     }
   }
@@ -271,10 +285,15 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
               border: Border.all(color: const Color(0xFFE00420), width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: _imagenes[index] != null
+            child: _imagenes[index] != null || _imagenesBytes[index] != null
                 ? Stack(
               children: [
-                Image.file(_imagenes[index]!,
+                kIsWeb
+                    ? Image.memory(_imagenesBytes[index]!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                )
+                    : Image.file(_imagenes[index]!,
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
@@ -833,50 +852,48 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
       pw.SizedBox(height: 8),
     ];
 
-    for (int i = 0; i < _imagenes.length; i++) {
-      final image = _imagenes[i];
-      if (image == null || !image.existsSync()) continue;
+    for (int i = 0; i < 3; i++) { // Para las 3 imágenes
+      Uint8List? imageBytes;
 
-      try {
-        final imageBytes = await image.readAsBytes();
-
-        String getImageTitle(int index) {
-          switch (index) {
-            case 0: return 'Unidad exterior o lugar de instalación';
-            case 1: return 'Corte de cañería';
-            case 2: return 'Derivaciones';
-            default: return 'Imagen ${index + 1}';
-          }
+      if (kIsWeb) {
+        imageBytes = _imagenesBytes[i];
+      } else {
+        final image = _imagenes[i];
+        if (image != null && image.existsSync()) {
+          imageBytes = await image.readAsBytes();
         }
-
-        widgets.add(
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                getImageTitle(i),
-                style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-              ),
-              pw.SizedBox(height: 4),
-              pw.Image(
-                pw.MemoryImage(imageBytes),
-                width: 300,
-                height: 200,
-                fit: pw.BoxFit.contain,
-              ),
-              pw.SizedBox(height: 12),
-            ],
-          ),
-        );
-      } catch (e) {
-        debugPrint('Error procesando imagen $i: $e');
-        widgets.add(
-          pw.Text(
-            'Error al cargar imagen ${i + 1}',
-            style: const pw.TextStyle(fontSize: 12, color: PdfColors.red),
-          ),
-        );
       }
+
+      if (imageBytes == null) continue;
+
+      String getImageTitle(int index) {
+        switch (index) {
+          case 0: return 'Unidad exterior o lugar de instalación';
+          case 1: return 'Corte de cañería';
+          case 2: return 'Derivaciones';
+          default: return 'Imagen ${index + 1}';
+        }
+      }
+
+      widgets.add(
+        pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              getImageTitle(i),
+              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 4),
+            pw.Image(
+              pw.MemoryImage(imageBytes),
+              width: 300,
+              height: 200,
+              fit: pw.BoxFit.contain,
+            ),
+            pw.SizedBox(height: 12),
+          ],
+        ),
+      );
     }
 
     if (widgets.length == 2) {

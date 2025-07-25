@@ -7,7 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 
 class PuestaMarchaScreen extends StatefulWidget {
   const PuestaMarchaScreen({super.key});
@@ -69,6 +69,7 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
 
   final List<File?> _imagenes = List.filled(2, null);
   final ImagePicker _picker = ImagePicker();
+  final List<Uint8List?> _imagenesBytes = List.filled(3, null);
 
   // ESTILOS UNIFICADOS PARA PDF
   final _tableHeaderStyle = pw.TextStyle(
@@ -131,7 +132,20 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
     if (option != null) {
       final XFile? image = await _picker.pickImage(source: option);
       if (image != null) {
-        setState(() => _imagenes[index] = File(image.path));
+        if (kIsWeb) {
+          // Para web: leer como bytes
+          final bytes = await image.readAsBytes();
+          setState(() {
+            _imagenesBytes[index] = bytes;
+            _imagenes[index] = null; // Asegurarse que el File sea null en web
+          });
+        } else {
+          // Para móvil/desktop: usar File normalmente
+          setState(() {
+            _imagenes[index] = File(image.path);
+            _imagenesBytes[index] = null;
+          });
+        }
       }
     }
   }
@@ -318,10 +332,15 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
               border: Border.all(color: const Color(0xFFE00420), width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: _imagenes[index] != null
+            child: _imagenes[index] != null || _imagenesBytes[index] != null
                 ? Stack(
               children: [
-                Image.file(_imagenes[index]!,
+                kIsWeb
+                    ? Image.memory(_imagenesBytes[index]!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                )
+                    : Image.file(_imagenes[index]!,
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
@@ -583,9 +602,13 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
           ),
         ),
         pw.SizedBox(height: 8),
-        _imagenes[0] != null
+        _imagenes[0] != null || _imagenesBytes[0] != null
             ? pw.Image(
-          pw.MemoryImage(_imagenes[0]!.readAsBytesSync()),
+          pw.MemoryImage(
+              kIsWeb
+                  ? _imagenesBytes[0]!
+                  : _imagenes[0]!.readAsBytesSync()
+          ),
           width: 400,
           height: 250,
           fit: pw.BoxFit.contain,
@@ -938,9 +961,13 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
           style: const pw.TextStyle(fontSize: 10),
         ),
         pw.SizedBox(height: 8),
-        _imagenes[1] != null
+        _imagenes[1] != null || _imagenesBytes[1] != null
             ? pw.Image(
-          pw.MemoryImage(_imagenes[1]!.readAsBytesSync()),
+          pw.MemoryImage(
+              kIsWeb
+                  ? _imagenesBytes[1]!
+                  : _imagenes[1]!.readAsBytesSync()
+          ),
           width: 500,
           height: 300,
           fit: pw.BoxFit.contain,
