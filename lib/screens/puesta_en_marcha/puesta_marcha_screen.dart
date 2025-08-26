@@ -1066,7 +1066,6 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
 
   // -------------------------------- Función para generar el Excel ------------------------------------------------
 
-
 Future<void> _generarExcel() async {
   final workbook = xlsio.Workbook();
   final sheet = workbook.worksheets[0];
@@ -1126,86 +1125,84 @@ Future<void> _generarExcel() async {
   });
 
   row += 2;
-  sheet.getRangeByIndex(row, 1).setText('Checklist');
-  sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
-  row++;
-
-
-  sheet.getRangeByIndex(row, 2).setText('SI');
-  sheet.getRangeByIndex(row, 3).setText('NO');
-  sheet.getRangeByIndex(row, 4).setText('N/C');
-  for (int col = 1; col <= 4; col++) {
-    sheet.getRangeByIndex(row, col).cellStyle = headerStyle;
-  }
-  row++;
-
+  
   final secciones = [
-    { 'titulo': 'INSTALADOR',
-        'preguntas': [
-          'Participó en el curso de entrenamiento de instalación y puesta en marcha',
-          'Cuenta con la herramienta necesaria (Vacuómetro, báscula digital, manómetros para refrigerante R-410, herramienta de mano)',
-          'El instalador cuenta con los planos o diagramas del proyecto y están corresponde a lo instalado en sitio',
-        ],
-        'campoNumerico': 'Relación de combinación del sistema (%):',
-        'valorCampo': _relacionCombinacionController.text,
-      },
-      {
-        'titulo': 'UNIDAD EXTERIOR',
-        'preguntas': [
-          'La unidad cuenta con los espacios requeridos para operación y servicio',
-          'La unidad cuenta con la base de concreto y/o acero además del aislamiento de neopreno',
-          'La unidad cuenta con tratamiento anticorrosivo y barrera contra brisa marina',
-          'La unidad cuenta con dispositivo local de desconexión de energía eléctrica',
-          'La unidad cuenta con los deflectores adecuados para su óptima operación',
-        ]
-      },
-      {
-        'titulo': 'SUMINISTRO ELECTRICO',
-        'preguntas': [
-          'La unidad cuenta con terminales eléctricas en el suministro de fuerza',
-          'La unidad cuenta con tierra física',
-          'El calibre del cable conductor de la línea de fuerza es el adecuado',
-          'La canalización del cable de fuerza va separada de la de control en condensador y evaporadores',
-        ],
-        'campoNumerico': 'Capacidad del interruptor termomagnético (A):',
-        'valorCampo': _capacidadInterruptorController.text,
-      },
-      {
-        'titulo': 'COMUNICACIÓN',
-        'preguntas': [
-          'El calibre del cable conductor de la línea de señal es el adecuado',
-          'La línea de comunicación unidad cuenta con blindaje',
-          'El blindaje de la línea de comunicación tiene continuidad y está aterrizado en la unidad exterior',
-          'La unidad cuenta con terminales eléctricas en la línea de comunicación',
-          'La canalización del cable de fuerza va separada de la de control en condensador y evaporadores',
-          'La línea de comunicación es independiente para cada sistema',
-        ]
-      },
-      {
-        'titulo': 'CARGA DE REFRIGERANTE',
-        'preguntas': [
-          'Prueba de hermeticidad 24 hs a 500 psig',
-          'Carga de refrigerante por peso',
-          'Carga de refrigerante en fase líquida',
-        ]
-      },
-      {
-        'titulo': 'CICLO REFRIGERANTE',
-        'preguntas': [
-          'Operan todas las unidades exteriores en modo de prueba de enfriamiento y calefacción',
-          'Operan todas las unidades interiores en velocidad alta',
-          'Verificación de los datos de funcionamiento después de 20 minutos de operación',
-          'Verifique la presión de descarga (Pd) y la temperatura de descarga (Td). ¿La temperatura del sobrecalentamiento en la descarga (TdSH) es de 15 a 45 °C?',
-          '¿La presión de succión Ps está entre 0.15 a 1.3 Mpa (21.76 a 188.55 psi)?',
-        ]
-      
+    { 
+      'titulo': 'INSTALADOR',
+      'preguntas': [
+        'Participó en el curso de entrenamiento de instalación y puesta en marcha',
+        'Cuenta con la herramienta necesaria (Vacuómetro, báscula digital, manómetros para refrigerante R-410, herramienta de mano)',
+        'El instalador cuenta con los planos o diagramas del proyecto y están corresponde a lo instalado en sitio',
+      ],
+      'campoNumerico': 'Relación de combinación del sistema (%):',
+      'valorCampo': _relacionCombinacionController.text,
     },
-    // Agregá las demás secciones como en tu PDF...
+    {
+      'titulo': 'UNIDAD EXTERIOR',
+      'preguntas': [
+        'La unidad cuenta con los espacios requeridos para operación y servicio',
+        'La unidad cuenta con la base de concreto y/o acero además del aislamiento de neopreno',
+        'La unidad cuenta con tratamiento anticorrosivo y barrera contra brisa marina',
+        'La unidad cuenta con dispositivo local de desconexión de energía eléctrica',
+        'La unidad cuenta con los deflectores adecuados para su óptima operación',
+      ]
+    },
+    {
+      'titulo': 'SUMINISTRO ELECTRICO',
+      'preguntas': [
+        'La unidad cuenta con terminales eléctricas en el suministro de fuerza',
+        'La unidad cuenta con tierra física',
+        'El calibre del cable conductor de la línea de fuerza es el adecuado',
+        'La canalización del cable de fuerza va separada de la de control en condensador y evaporadores',
+      ],
+      'campoNumerico': 'Capacidad del interruptor termomagnético (A):',
+      'valorCampo': _capacidadInterruptorController.text,
+    },
+    {
+      'titulo': 'COMUNICACIÓN',
+      'preguntas': [
+        'El calibre del cable conductor de la línea de señal es el adecuado',
+        'La línea de comunicación unidad cuenta con blindaje',
+        'El blindaje de la línea de comunicación tiene continuidad y está aterrizado en la unidad exterior',
+        'La unidad cuenta con terminales eléctricas en la línea de comunicación',
+        'La canalización del cable de fuerza va separada de la de control en condensador y evaporadores',
+        'La línea de comunicación es independiente para cada sistema',
+      ]
+    },
+    {
+      'titulo': 'CARGA DE REFRIGERANTE',
+      'preguntas': [
+        'Prueba de hermeticidad 24 hs a 500 psig',
+        'Carga de refrigerante por peso',
+        'Carga de refrigerante en fase líquida',
+      ]
+    },
+    {
+      'titulo': 'CICLO REFRIGERANTE',
+      'preguntas': [
+        'Operan todas las unidades exteriores en modo de prueba de enfriamiento y calefacción',
+        'Operan todas las unidades interiores en velocidad alta',
+        'Verificación de los datos de funcionamiento después de 20 minutos de operación',
+        'Verifique la presión de descarga (Pd) y la temperatura de descarga (Td). ¿La temperatura del sobrecalentamiento en la descarga (TdSH) es de 15 a 45 °C?',
+        '¿La presión de succión Ps está entre 0.15 a 1.3 Mpa (21.76 a 188.55 psi)?',
+      ]
+    },
   ];
 
   for (var seccion in secciones) {
     sheet.getRangeByIndex(row, 1).setText(seccion['titulo'] as String);
     sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+    row++;
+
+    // Encabezados SI-NO-N/C para CADA sección
+    
+    sheet.getRangeByIndex(row, 2).setText('SI');
+    sheet.getRangeByIndex(row, 3).setText('NO');
+    sheet.getRangeByIndex(row, 4).setText('N/C');
+    
+    for (int col = 1; col <= 4; col++) {
+      sheet.getRangeByIndex(row, col).cellStyle = headerStyle;
+    }
     row++;
 
     final preguntas = seccion['preguntas'] as List<String>;
@@ -1234,7 +1231,70 @@ Future<void> _generarExcel() async {
     row++;
   }
 
-  // Observaciones
+  // =============================================
+  // SECCIÓN: CONFIGURACIÓN MAIN/ESCLAVAS
+  // =============================================
+  row += 2;
+
+  // Título de la sección
+  sheet.getRangeByIndex(row, 1).setText('CONFIGURACIÓN');
+  sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+  row++;
+
+  // Encabezado de la tabla
+  final configHeaders = ['Pregunta', 'MAIN', 'SLAVE 1', 'SLAVE 2', 'SLAVE 3'];
+  for (int col = 0; col < configHeaders.length; col++) {
+    sheet.getRangeByIndex(row, col + 1).setText(configHeaders[col]);
+    sheet.getRangeByIndex(row, col + 1).cellStyle = headerStyle;
+  }
+  row++;
+
+  // Datos de la tabla
+  for (var pregunta in _respuestasMainEsclavas) {
+    final index = _respuestasMainEsclavas.indexOf(pregunta) + 1;
+    
+    // Pregunta
+    sheet.getRangeByIndex(row, 1).setText('$index. ${pregunta['pregunta']}');
+    
+    // MAIN
+    if (pregunta['main'] == true) {
+      sheet.getRangeByIndex(row, 2).setText('SI');
+      sheet.getRangeByIndex(row, 2).cellStyle = greenStyle;
+    } else {
+      sheet.getRangeByIndex(row, 2).setText('');
+    }
+    
+    // SLAVE 1
+    if (pregunta['slave1'] == true) {
+      sheet.getRangeByIndex(row, 3).setText('SI');
+      sheet.getRangeByIndex(row, 3).cellStyle = greenStyle;
+    } else {
+      sheet.getRangeByIndex(row, 3).setText('');
+    }
+    
+    // SLAVE 2
+    if (pregunta['slave2'] == true) {
+      sheet.getRangeByIndex(row, 4).setText('SI');
+      sheet.getRangeByIndex(row, 4).cellStyle = greenStyle;
+    } else {
+      sheet.getRangeByIndex(row, 4).setText('');
+    }
+    
+    // SLAVE 3
+    if (pregunta['slave3'] == true) {
+      sheet.getRangeByIndex(row, 5).setText('SI');
+      sheet.getRangeByIndex(row, 5).cellStyle = greenStyle;
+    } else {
+      sheet.getRangeByIndex(row, 5).setText('');
+    }
+    
+    row++;
+  }
+
+  // =============================================
+  // OBSERVACIONES
+  // =============================================
+  row += 2;
   sheet.getRangeByIndex(row, 1).setText('OBSERVACIONES');
   sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
   row++;
@@ -1243,18 +1303,26 @@ Future<void> _generarExcel() async {
       : 'No se registraron observaciones');
   row += 2;
 
-  // Imágenes
+  // =============================================
+  // IMÁGENES
+  // =============================================
+  
+  row += 2;
+
   for (int i = 0; i < _imagenes.length; i++) {
     final image = _imagenes[i];
     final bytes = _imagenesBytes[i];
     if (image != null || bytes != null) {
       final imgBytes = bytes ?? await image!.readAsBytes();
       sheet.pictures.addStream(row, 1, imgBytes);
-      row += 50;
+      row += 40;
     }
   }
 
+  // Ajustar automáticamente el ancho de las columnas
   sheet.autoFitColumn(1);
+
+
   final bytes = workbook.saveAsStream();
   workbook.dispose();
 
