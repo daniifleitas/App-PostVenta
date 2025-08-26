@@ -8,6 +8,8 @@ import 'package:printing/printing.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
+import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
+
 
 class PuestaMarchaScreen extends StatefulWidget {
   const PuestaMarchaScreen({super.key});
@@ -905,7 +907,7 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
                   ),
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
       ],
@@ -991,16 +993,10 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
             'Cliente: ${_empresaInstaladoraController.text}',
             style: const pw.TextStyle(fontSize: 10),
           ),
-          if (pdfContext.pageNumber != null)
-            pw.Text(
-              'Página ${pdfContext.pageNumber}',
-              style: const pw.TextStyle(fontSize: 10),
-            )
-          else
-            pw.Text(
-              'Página -',
-              style: const pw.TextStyle(fontSize: 10),
-            ),
+          pw.Text(
+            'Página ${pdfContext.pageNumber}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
         ],
       ),
     );
@@ -1065,6 +1061,216 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
       );
     }
   }
+
+       
+
+  // -------------------------------- Función para generar el Excel ------------------------------------------------
+
+
+Future<void> _generarExcel() async {
+  final workbook = xlsio.Workbook();
+  final sheet = workbook.worksheets[0];
+  sheet.name = 'Informe VRF';
+
+  // Estilos
+  final titleStyle = workbook.styles.add('TitleStyle')
+    ..bold = true
+    ..fontSize = 14
+    ..fontColor = '#E11931';
+
+  final headerStyle = workbook.styles.add('HeaderStyle')
+    ..bold = true
+    ..fontColor = '#000000';
+
+  final greenStyle = workbook.styles.add('GreenStyle')
+    ..bold = true
+    ..fontColor = '#4CAF50';
+
+  final redStyle = workbook.styles.add('RedStyle')
+    ..bold = true
+    ..fontColor = '#F44336';
+
+  final yellowStyle = workbook.styles.add('YellowStyle')
+    ..bold = true
+    ..fontColor = '#FF9800';
+
+  int row = 1;
+
+  // Título
+  sheet.getRangeByIndex(row, 1).setText('INFORME DE ARRANQUE PARA EQUIPOS DE VRF');
+  sheet.getRangeByIndex(row, 1).cellStyle = titleStyle;
+  sheet.getRangeByIndex(row, 1, row, 4).merge();
+  row += 2;
+
+  // Información general
+  final info = {
+    'Fecha': _fechaController.text,
+    'Nombre de la obra': _nombreObraController.text,
+    'Dirección': _direccionController.text,
+    'Empresa instaladora': _empresaInstaladoraController.text,
+    'Contacto en obra': _contactoObraController.text,
+    'Responsable de la puesta en marcha': _responsableController.text,
+    'Visita N°': _visitaNumeroController.text,
+    'Modelo unidad exterior principal': _modeloPrincipalController.text,
+    'Modelo unidad exterior esclava 1': _modeloEsclava1Controller.text,
+    'Modelo unidad exterior esclava 2': _modeloEsclava2Controller.text,
+    'Modelo unidad exterior esclava 3': _modeloEsclava3Controller.text,
+    'Modelo unidad exterior esclava 4': _modeloEsclava4Controller.text,
+  };
+
+  info.forEach((label, value) {
+    sheet.getRangeByIndex(row, 1).setText(label);
+    sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+    sheet.getRangeByIndex(row, 2).setText(value.isNotEmpty ? value : 'No especificado');
+    row++;
+  });
+
+  row += 2;
+  sheet.getRangeByIndex(row, 1).setText('Checklist');
+  sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+  row++;
+
+
+  sheet.getRangeByIndex(row, 2).setText('SI');
+  sheet.getRangeByIndex(row, 3).setText('NO');
+  sheet.getRangeByIndex(row, 4).setText('N/C');
+  for (int col = 1; col <= 4; col++) {
+    sheet.getRangeByIndex(row, col).cellStyle = headerStyle;
+  }
+  row++;
+
+  final secciones = [
+    { 'titulo': 'INSTALADOR',
+        'preguntas': [
+          'Participó en el curso de entrenamiento de instalación y puesta en marcha',
+          'Cuenta con la herramienta necesaria (Vacuómetro, báscula digital, manómetros para refrigerante R-410, herramienta de mano)',
+          'El instalador cuenta con los planos o diagramas del proyecto y están corresponde a lo instalado en sitio',
+        ],
+        'campoNumerico': 'Relación de combinación del sistema (%):',
+        'valorCampo': _relacionCombinacionController.text,
+      },
+      {
+        'titulo': 'UNIDAD EXTERIOR',
+        'preguntas': [
+          'La unidad cuenta con los espacios requeridos para operación y servicio',
+          'La unidad cuenta con la base de concreto y/o acero además del aislamiento de neopreno',
+          'La unidad cuenta con tratamiento anticorrosivo y barrera contra brisa marina',
+          'La unidad cuenta con dispositivo local de desconexión de energía eléctrica',
+          'La unidad cuenta con los deflectores adecuados para su óptima operación',
+        ]
+      },
+      {
+        'titulo': 'SUMINISTRO ELECTRICO',
+        'preguntas': [
+          'La unidad cuenta con terminales eléctricas en el suministro de fuerza',
+          'La unidad cuenta con tierra física',
+          'El calibre del cable conductor de la línea de fuerza es el adecuado',
+          'La canalización del cable de fuerza va separada de la de control en condensador y evaporadores',
+        ],
+        'campoNumerico': 'Capacidad del interruptor termomagnético (A):',
+        'valorCampo': _capacidadInterruptorController.text,
+      },
+      {
+        'titulo': 'COMUNICACIÓN',
+        'preguntas': [
+          'El calibre del cable conductor de la línea de señal es el adecuado',
+          'La línea de comunicación unidad cuenta con blindaje',
+          'El blindaje de la línea de comunicación tiene continuidad y está aterrizado en la unidad exterior',
+          'La unidad cuenta con terminales eléctricas en la línea de comunicación',
+          'La canalización del cable de fuerza va separada de la de control en condensador y evaporadores',
+          'La línea de comunicación es independiente para cada sistema',
+        ]
+      },
+      {
+        'titulo': 'CARGA DE REFRIGERANTE',
+        'preguntas': [
+          'Prueba de hermeticidad 24 hs a 500 psig',
+          'Carga de refrigerante por peso',
+          'Carga de refrigerante en fase líquida',
+        ]
+      },
+      {
+        'titulo': 'CICLO REFRIGERANTE',
+        'preguntas': [
+          'Operan todas las unidades exteriores en modo de prueba de enfriamiento y calefacción',
+          'Operan todas las unidades interiores en velocidad alta',
+          'Verificación de los datos de funcionamiento después de 20 minutos de operación',
+          'Verifique la presión de descarga (Pd) y la temperatura de descarga (Td). ¿La temperatura del sobrecalentamiento en la descarga (TdSH) es de 15 a 45 °C?',
+          '¿La presión de succión Ps está entre 0.15 a 1.3 Mpa (21.76 a 188.55 psi)?',
+        ]
+      
+    },
+    // Agregá las demás secciones como en tu PDF...
+  ];
+
+  for (var seccion in secciones) {
+    sheet.getRangeByIndex(row, 1).setText(seccion['titulo'] as String);
+    sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+    row++;
+
+    final preguntas = seccion['preguntas'] as List<String>;
+    for (int i = 0; i < preguntas.length; i++) {
+      final respuesta = _respuestas[secciones.indexOf(seccion)][i];
+      sheet.getRangeByIndex(row, 1).setText('${i + 1}. ${preguntas[i]}');
+      if (respuesta == 'SI') {
+        sheet.getRangeByIndex(row, 2).setText('X');
+        sheet.getRangeByIndex(row, 2).cellStyle = greenStyle;
+      } else if (respuesta == 'NO') {
+        sheet.getRangeByIndex(row, 3).setText('X');
+        sheet.getRangeByIndex(row, 3).cellStyle = redStyle;
+      } else if (respuesta == 'N/C') {
+        sheet.getRangeByIndex(row, 4).setText('X');
+        sheet.getRangeByIndex(row, 4).cellStyle = yellowStyle;
+      }
+      row++;
+    }
+
+    if (seccion['campoNumerico'] != null) {
+      sheet.getRangeByIndex(row, 1).setText(seccion['campoNumerico']?.toString() ?? '');
+      sheet.getRangeByIndex(row, 2).setText('${seccion['valorCampo'] ?? 'No especificado'}');
+      row++;
+    }
+
+    row++;
+  }
+
+  // Observaciones
+  sheet.getRangeByIndex(row, 1).setText('OBSERVACIONES');
+  sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+  row++;
+  sheet.getRangeByIndex(row, 1).setText(_observacionesController.text.isNotEmpty
+      ? _observacionesController.text
+      : 'No se registraron observaciones');
+  row += 2;
+
+  // Imágenes
+  for (int i = 0; i < _imagenes.length; i++) {
+    final image = _imagenes[i];
+    final bytes = _imagenesBytes[i];
+    if (image != null || bytes != null) {
+      final imgBytes = bytes ?? await image!.readAsBytes();
+      sheet.pictures.addStream(row, 1, imgBytes);
+      row += 50;
+    }
+  }
+
+  sheet.autoFitColumn(1);
+  final bytes = workbook.saveAsStream();
+  workbook.dispose();
+
+  if (kIsWeb) {
+    await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'InformeArranqueVRF.xlsx');
+  } else {
+    final directory = await getTemporaryDirectory();
+    final path = '${directory.path}/InformeArranqueVRF_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    await OpenFile.open(path);
+  }
+}
+
+
+// ------------------------------------------ PRUEBA -------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -1193,6 +1399,27 @@ class _PuestaMarchaScreenState extends State<PuestaMarchaScreen> {
                   ),
                   child: const Text(
                     'GENERAR INFORME PDF',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+            // Agregar el botón debajo del de PDF
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _generarExcel,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 4, 129, 6),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'GENERAR EXCEL',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),

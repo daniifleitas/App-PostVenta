@@ -919,16 +919,10 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
             'Cliente: ${_empresaInstaladoraController.text}',
             style: const pw.TextStyle(fontSize: 10),
           ),
-          if (pdfContext.pageNumber != null)
-            pw.Text(
-              'Página ${pdfContext.pageNumber}',
-              style: const pw.TextStyle(fontSize: 10),
-            )
-          else
-            pw.Text(
-              'Página -',
-              style: const pw.TextStyle(fontSize: 10),
-            ),
+          pw.Text(
+            'Página ${pdfContext.pageNumber}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
         ],
       ),
     );
