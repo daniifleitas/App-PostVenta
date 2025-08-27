@@ -41,6 +41,7 @@ dependencies:
   path_provider_windows: ^2.1.0
   open_file: ^3.2.1
   syncfusion_flutter_xlsio: ^30.2.4
+  
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -75,6 +76,8 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon.png"  # Ruta de tu imagen (1024x1024 px recomendado)
+  
+  
 
   # To add assets to your application, add an assets section, like this:
   # assets:

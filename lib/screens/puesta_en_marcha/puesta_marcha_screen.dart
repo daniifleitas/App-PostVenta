@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1303,21 +1305,48 @@ Future<void> _generarExcel() async {
       : 'No se registraron observaciones');
   row += 2;
 
-  // =============================================
-  // IMÁGENES
-  // =============================================
-  
-  row += 2;
+// =============================================
+// IMÁGENES CON TÍTULO
+// =============================================
+row += 2;
 
-  for (int i = 0; i < _imagenes.length; i++) {
-    final image = _imagenes[i];
-    final bytes = _imagenesBytes[i];
-    if (image != null || bytes != null) {
-      final imgBytes = bytes ?? await image!.readAsBytes();
-      sheet.pictures.addStream(row, 1, imgBytes);
-      row += 40;
+// Lista de títulos para las imágenes
+final List<String> titulosImagenes = [
+  'Diagrama de tuberías',
+  'Service Checker'
+];
+
+for (int i = 0; i < _imagenes.length; i++) {
+  final image = _imagenes[i];
+  final bytes = _imagenesBytes[i];
+  if (image != null || bytes != null) {
+    
+    // Agregar título de la imagen (usando el título correspondiente de la lista)
+    if (i < titulosImagenes.length) {
+      sheet.getRangeByIndex(row, 1).setText(titulosImagenes[i]);
+      sheet.getRangeByIndex(row, 1).cellStyle = headerStyle;
+      row++;
     }
+    
+    // Agregar la imagen
+    final imgBytes = bytes ?? await image!.readAsBytes();
+    // Obtener las dimensiones de la imagen para calcular el espacio
+    final codec = await instantiateImageCodec(imgBytes);
+    final frameInfo = await codec.getNextFrame();
+    final imageHeight = frameInfo.image.height;
+    final imageWidth = frameInfo.image.width;
+    
+    // Calcular el espacio en filas basado en la altura de la imagen
+    // (Aproximadamente 25 pixels por fila de Excel)
+    final espacioImagen = (imageHeight / 20).ceil();
+    
+    sheet.pictures.addStream(row, 1, imgBytes);
+    row += espacioImagen + 2; // +5 para espacio adicional
+    
+    // Espacio entre imágenes
+    row += 1;
   }
+}
 
   // Ajustar automáticamente el ancho de las columnas
   sheet.autoFitColumn(1);
